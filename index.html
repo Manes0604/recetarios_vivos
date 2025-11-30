@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recetarios Vivos: cocina como territorio</title>
+    <script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' />
+    <link rel="stylesheet" href="https://unpkg.com/lucide@latest/font/lucide.css">
+    <style>
+        /* Estilos generales */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #e8dec7;
+            color: #2c3028;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        /* Estilos para pantallas grandes */
+        @media (min-width: 768px) {
+            .container {
+                flex-direction: row;
+            }
+        }
+        
+        /* Columna del menú */
+        .menu-column {
+            background-color: #c5b182;
+            padding: 20px;
+            width: 100%;
+            z-index: 10;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        @media (min-width: 768px) {
+            .menu-column {
+                width: 280px;
+                min-height: 100vh;
+                position: fixed;
+                left: 0;
+                top: 0;
+            }
+            
+            .content-column {
+                margin-left: 280px;
+            }
+        }
+        
+        .menu-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #2c3028;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(44, 48, 40, 0.3);
+        }
+        
+        .menu {
+            list-style: none;
+        }
+        
+        .menu-item {
+            margin-bottom: 10px;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #2c3028;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .menu-link:hover {
+            background-color: rgba(44, 48, 40, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .menu-link.active {
+            background-color: #2c3028;
+            color: #e8dec7;
+        }
+        
+        /* Columna del contenido */
+        .content-column {
+            flex: 1;
+            padding: 20px;
+            width: 100%;
+        }
+        
+        .content-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #2c3028;
+            text-align: center;
+            font-style: italic;
+            padding: 0 10px;
+        }
+        
+        .content-section {
+            display: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .content-section h2 {
+            margin-bottom: 15px;
+            color: #2c3028;
+            border-bottom: 2px solid #c5b182;
+            padding-bottom: 8px;
+        }
+        
+        .content-section p {
+            margin-bottom: 15px;
+        }
+        
+        /* Estilos para el mapa */
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        /* Overlay para el popup */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeInOverlay 0.3s ease;
+        }
+        
+        @keyframes fadeInOverlay {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .popup-overlay.active {
+            display: flex;
+        }
+        
+        /* Popup centrado */
+        .centered-popup {
+            background-color: #e8dec7;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            animation: popupAppear 0.4s ease forwards;
+            border: 3px solid #c5b182;
+            overflow: hidden;
+        }
+        
+        @keyframes popupAppear {
+            to {
+                transform: scale(1);
+            }
+        }
+        
+        .popup-content {
+            padding: 25px;
+            position: relative;
+        }
+        
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #c5b182;
+        }
+        
+        .popup-title {
+            font-weight: bold;
+            color: #2c3028;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+        
+        .popup-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #2c3028;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-close:hover {
+            background-color: rgba(44, 48, 40, 0.1);
+            transform: rotate(90deg);
+        }
+        
+        .popup-video {
+            width: 100%;
+            height: 250px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .popup-description {
+            color: #2c3028;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .popup-footer {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            border-top: 1px solid #c5b182;
+            font-size: 0.9rem;
+            color: #5a5340;
+        }
+        
+        /* Estilos para controles del mapa */
+        .map-controls {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .map-controls h3 {
+            margin-bottom: 15px;
+            color: #2c3028;
+            display: flex;
+            align-items: center;
+        }
+        
+        .map-controls h3 i {
+            margin-right: 10px;
+        }
+        
+        .location-list {
+            list-style: none;
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .location-item {
+            padding: 12px;
+            background-color: rgba(197, 177, 130, 0.3);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        
+        .location-item:hover {
+            background-color: rgba(197, 177, 130, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .location-item.active {
+            background-color: #2c3028;
+            color: #e8dec7;
+            border-color: #c5b182;
+        }
+        
+        /* Controles 3D del mapa */
+        .map-3d-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .control-btn {
+            background: #2c3028;
+            color: #e8dec7;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #1a1c18;
+            transform: scale(1.05);
+        }
+        
+        .control-btn i {
+            margin-right: 5px;
+        }
+        
+        /* Iconos personalizados para marcadores */
+        .custom-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid white;
+        }
+        
+        .custom-marker:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        }
+        
+        .marker-oaxaca { background: linear-gradient(135deg, #e53e3e, #c53030); }
+        .marker-puebla { background: linear-gradient(135deg, #38a169, #2f855a); }
+        .marker-yucatan { background: linear-gradient(135deg, #3182ce, #2c5aa0); }
+        .marker-jalisco { background: linear-gradient(135deg, #d69e2e, #b7791f); }
+        .marker-veracruz { background: linear-gradient(135deg, #805ad5, #6b46c1); }
+        
+        /* Efectos de secciones de contenido */
+        .section-content {
+            padding: 25px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 0 0 12px 12px;
+        }
+        
+        /* Responsive mejoras */
+        @media (max-width: 767px) {
+            .location-list {
+                grid-template-columns: 1fr;
+            }
+            
+            #map {
+                height: 450px;
+            }
+            
+            .content-title {
+                font-size: 1.5rem;
+            }
+            
+            .centered-popup {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            .popup-content {
+                padding: 20px;
+            }
+            
+            .popup-video {
+                height: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .popup-video {
+                height: 180px;
+            }
+            
+            .popup-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay para popup -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="centered-popup">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <div class="popup-title" id="popupTitle">Título del Platillo</div>
+                    <button class="popup-close" id="popupClose">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+                <iframe class="popup-video" id="popupVideo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                <div class="popup-description" id="popupDescription">Descripción del platillo...</div>
+                <div class="popup-footer">
+                    <span id="popupRegion">Región</span>
+                    <span>Gastronomía Mexicana</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Columna del menú -->
+        <div class="menu-column">
+            <div class="menu-title">Recetarios Vivos: cocina como territorio</div>
+            <ul class="menu">
+                <li class="menu-item">
+                    <a href="#" class="menu-link active" data-target="inicio">
+                        <i data-lucide="home"></i> Inicio
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-target="mapa">
+                        <i data-lucide="map-pin"></i> Mapa de sabores
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-target="recetarios">
+                        <i data-lucide="book-open"></i> Recetarios vivos
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-target="cocina">
+                        <i data-lucide="chef-hat"></i> Cocina como territorio
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-target="participa">
+                        <i data-lucide="users"></i> Participa
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Columna del contenido -->
+        <div class="content-column">
+            <div class="content-title">
+                Cada receta guarda un territorio. Cada sazón, una memoria que arde. 
+                En estas geografías comestibles, el mapa es un cuerpo y el fuego, su relato.
+            </div>
+            
+            <!-- Secciones de contenido -->
+            <div id="inicio" class="content-section active">
+                <div class="section-content">
+                    <h2>Inicio</h2>
+                    <p>Bienvenido a Recetarios Vivos, un espacio donde la cocina se convierte en territorio y las recetas en memorias vivas.</p>
+                    <p>Explora nuestras secciones para descubrir sabores, historias y tradiciones culinarias que conectan personas y lugares.</p>
+                </div>
+            </div>
+            
+            <div id="mapa" class="content-section">
+                <div id="map"></div>
+                
+                <!-- Controles 3D -->
+                <div class="map-3d-controls">
+                    <button class="control-btn" id="toggle-3d">
+                        <i data-lucide="box"></i> 3D
+                    </button>
+                    <button class="control-btn" id="reset-view">
+                        <i data-lucide="rotate-ccw"></i> Reset
+                    </button>
+                </div>
+                
+                <!-- Controles del mapa -->
+                <div class="map-controls">
+                    <h3><i data-lucide="navigation"></i> Ubicaciones destacadas</h3>
+                    <p>Haz clic en los marcadores del mapa o en las ubicaciones de la lista para explorar:</p>
+                    <ul class="location-list">
+                        <li class="location-item" data-location="0">
+                            <strong>Oaxaca</strong><br>Mole tradicional
+                        </li>
+                        <li class="location-item" data-location="1">
+                            <strong>Puebla</strong><br>Chiles en nogada
+                        </li>
+                        <li class="location-item" data-location="2">
+                            <strong>Yucatán</strong><br>Cochinita pibil
+                        </li>
+                        <li class="location-item" data-location="3">
+                            <strong>Jalisco</strong><br>Birria
+                        </li>
+                        <li class="location-item" data-location="4">
+                            <strong>Veracruz</strong><br>Huachinango a la veracruzana
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="recetarios" class="content-section">
+                <div class="section-content">
+                    <h2>Recetarios Vivos</h2>
+                    <p>Colección de recetas tradicionales que han sido transmitidas de generación en generación.</p>
+                    <p>Cada receta incluye no solo ingredientes y preparación, sino también las historias y memorias asociadas a ella.</p>
+                </div>
+            </div>
+            
+            <div id="cocina" class="content-section">
+                <div class="section-content">
+                    <h2>Cocina como Territorio</h2>
+                    <p>Exploramos cómo la cocina define y es definida por el territorio, creando identidades culturales únicas.</p>
+                    <p>La relación entre ingredientes locales, técnicas tradicionales y el paisaje que los rodea.</p>
+                </div>
+            </div>
+            
+            <div id="participa" class="content-section">
+                <div class="section-content">
+                    <h2>Participa</h2>
+                    <p>Tu participación es fundamental para mantener vivas estas tradiciones culinarias.</p>
+                    <p>Comparte tus recetas familiares, historias culinarias o únete a nuestras actividades y talleres.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script>
+        // Inicializar iconos
+        lucide.createIcons();
+        
+        // Variables globales
+        let map;
+        let is3DEnabled = false;
+        let markers = [];
+        let currentLocationIndex = null;
+
+        // Elementos del popup personalizado
+        const popupOverlay = document.getElementById('popupOverlay');
+        const popupTitle = document.getElementById('popupTitle');
+        const popupVideo = document.getElementById('popupVideo');
+        const popupDescription = document.getElementById('popupDescription');
+        const popupRegion = document.getElementById('popupRegion');
+        const popupClose = document.getElementById('popupClose');
+
+        // Función para cambiar entre secciones
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuLinks = document.querySelectorAll('.menu-link');
+            
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remover clase active de todos los enlaces
+                    menuLinks.forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    
+                    // Agregar clase active al enlace clickeado
+                    this.classList.add('active');
+                    
+                    // Ocultar todas las secciones de contenido
+                    const contentSections = document.querySelectorAll('.content-section');
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Mostrar la sección correspondiente
+                    const targetId = this.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    if (targetSection) {
+                        targetSection.classList.add('active');
+                        
+                        // Si es la sección del mapa, ajustar el tamaño después de mostrarse
+                        if (targetId === 'mapa') {
+                            setTimeout(() => {
+                                if (map) map.resize();
+                            }, 100);
+                        }
+                    }
+                });
+            });
+            
+            // Inicializar el mapa cuando se carga la página
+            initMap();
+            
+            // Configurar controles 3D
+            document.getElementById('toggle-3d').addEventListener('click', toggle3D);
+            document.getElementById('reset-view').addEventListener('click', resetView);
+            
+            // Configurar cierre del popup
+            popupClose.addEventListener('click', closePopup);
+            popupOverlay.addEventListener('click', function(e) {
+                if (e.target === popupOverlay) {
+                    closePopup();
+                }
+            });
+            
+            // Cerrar popup con tecla ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closePopup();
+                }
+            });
+        });
+
+        // Configuración e inicialización del mapa con MapLibre
+        function initMap() {
+            // Crear el mapa
+            map = new maplibregl.Map({
+                container: 'map',
+                style: {
+                    version: 8,
+                    sources: {
+                        'raster-tiles': {
+                            type: 'raster',
+                            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                            tileSize: 256,
+                            attribution: '© OpenStreetMap contributors'
+                        }
+                    },
+                    layers: [{
+                        id: 'simple-tiles',
+                        type: 'raster',
+                        source: 'raster-tiles',
+                        minzoom: 0,
+                        maxzoom: 22
+                    }]
+                },
+                center: [-99.1332, 19.4326], // Centro en Ciudad de México
+                zoom: 5,
+                pitch: 0, // Inicialmente sin inclinación 3D
+                bearing: 0
+            });
+            
+            // Añadir controles de navegación
+            map.addControl(new maplibregl.NavigationControl());
+            
+            // Datos de las ubicaciones
+            const locations = [
+                {
+                    coordinates: [-96.7236, 17.0732], // Oaxaca
+                    title: "Mole Oaxaqueño",
+                    videoId: "dQw4w9WgXcQ",
+                    description: "El mole oaxaqueño es una de las siete variedades de mole que se preparan en Oaxaca. Esta receta ancestral combina más de 20 ingredientes, incluyendo chiles, especias, chocolate y semillas.",
+                    region: "Oaxaca",
+                    iconClass: "marker-oaxaca",
+                    iconText: "M"
+                },
+                {
+                    coordinates: [-98.2062, 19.0414], // Puebla
+                    title: "Chiles en Nogada",
+                    videoId: "dQw4w9WgXcQ",
+                    description: "Plato tradicional poblano que representa los colores de la bandera mexicana. Se prepara con chile poblano relleno de picadillo y cubierto con salsa de nuez y granada.",
+                    region: "Puebla",
+                    iconClass: "marker-puebla",
+                    iconText: "C"
+                },
+                {
+                    coordinates: [-89.5926, 20.9674], // Yucatán
+                    title: "Cochinita Pibil",
+                    videoId: "dQw4w9WgXcQ",
+                    description: "La cochinita pibil es un platillo yucateco que consiste en carne de cerdo marinada en achiote y jugo de naranja agria, cocida lentamente en un horno de tierra.",
+                    region: "Yucatán",
+                    iconClass: "marker-yucatan",
+                    iconText: "C"
+                },
+                {
+                    coordinates: [-103.3496, 20.6597], // Jalisco
+                    title: "Birria",
+                    videoId: "dQw4w9WgXcQ",
+                    description: "La birria es un platillo típico de Jalisco, especialmente de la zona de Los Altos. Se prepara con carne de chivo o res, adobada con una mezcla de chiles y especias.",
+                    region: "Jalisco",
+                    iconClass: "marker-jalisco",
+                    iconText: "B"
+                },
+                {
+                    coordinates: [-96.1340, 19.1738], // Veracruz
+                    title: "Huachinango a la Veracruzana",
+                    videoId: "dQw4w9WgXcQ",
+                    description: "Plato emblemático de Veracruz que consiste en filetes de huachinango cocidos en una salsa de jitomate, aceitunas, alcaparras y chiles güeros.",
+                    region: "Veracruz",
+                    iconClass: "marker-veracruz",
+                    iconText: "H"
+                }
+            ];
+            
+            // Añadir marcadores al mapa cuando esté cargado
+            map.on('load', function() {
+                locations.forEach((location, index) => {
+                    // Crear elemento HTML personalizado para el marcador
+                    const el = document.createElement('div');
+                    el.className = `custom-marker ${location.iconClass}`;
+                    el.innerHTML = location.iconText;
+                    el.title = location.title;
+                    
+                    // Crear el marcador
+                    const marker = new maplibregl.Marker({
+                        element: el
+                    })
+                        .setLngLat(location.coordinates)
+                        .addTo(map);
+                    
+                    // Guardar referencia al marcador
+                    markers.push(marker);
+                    
+                    // Configurar evento para el marcador
+                    el.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        currentLocationIndex = index;
+                        flyToLocation(index);
+                    });
+                });
+            });
+            
+            // Función para centrar el mapa en una ubicación específica con animación
+            function flyToLocation(index) {
+                if (index >= 0 && index < locations.length) {
+                    const location = locations[index];
+                    
+                    // Actualizar estado activo en la lista
+                    document.querySelectorAll('.location-item').forEach((item, i) => {
+                        if (i === index) {
+                            item.classList.add('active');
+                        } else {
+                            item.classList.remove('active');
+                        }
+                    });
+                    
+                    // Animación de vuelo al punto
+                    map.flyTo({
+                        center: location.coordinates,
+                        zoom: 12,
+                        pitch: is3DEnabled ? 60 : 45,
+                        bearing: 0,
+                        duration: 2000,
+                        essential: true
+                    });
+                    
+                    // Mostrar el popup después de la animación
+                    setTimeout(() => {
+                        showPopup(location);
+                    }, 2100);
+                }
+            }
+            
+            // Añadir eventos a los elementos de la lista de ubicaciones
+            document.querySelectorAll('.location-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const locationIndex = parseInt(this.getAttribute('data-location'));
+                    currentLocationIndex = locationIndex;
+                    flyToLocation(locationIndex);
+                });
+            });
+        }
+        
+        // Función para mostrar el popup personalizado
+        function showPopup(location) {
+            popupTitle.textContent = location.title;
+            popupVideo.src = `https://www.youtube.com/embed/${location.videoId}`;
+            popupDescription.textContent = location.description;
+            popupRegion.textContent = location.region;
+            
+            popupOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll
+        }
+        
+        // Función para cerrar el popup
+        function closePopup() {
+            popupOverlay.classList.remove('active');
+            document.body.style.overflow = ''; // Restaurar scroll
+            
+            // Pausar el video
+            popupVideo.src = '';
+        }
+        
+        // Función para alternar vista 3D
+        function toggle3D() {
+            is3DEnabled = !is3DEnabled;
+            
+            if (is3DEnabled) {
+                map.flyTo({
+                    pitch: 60,
+                    duration: 1500
+                });
+                document.getElementById('toggle-3d').innerHTML = '<i data-lucide="box"></i> 2D';
+            } else {
+                map.flyTo({
+                    pitch: 0,
+                    duration: 1500
+                });
+                document.getElementById('toggle-3d').innerHTML = '<i data-lucide="box"></i> 3D';
+            }
+            
+            lucide.createIcons();
+        }
+        
+        // Función para resetear la vista del mapa
+        function resetView() {
+            map.flyTo({
+                center: [-99.1332, 19.4326],
+                zoom: 5,
+                pitch: 0,
+                bearing: 0,
+                duration: 1500
+            });
+            
+            is3DEnabled = false;
+            document.getElementById('toggle-3d').innerHTML = '<i data-lucide="box"></i> 3D';
+            lucide.createIcons();
+            
+            // Quitar estado activo de la lista
+            document.querySelectorAll('.location-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Cerrar popup si está abierto
+            closePopup();
+        }
+    </script>
+</body>
+</html>
