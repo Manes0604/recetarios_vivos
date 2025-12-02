@@ -241,12 +241,56 @@
             transform: rotate(90deg);
         }
         
-        .popup-video {
+        .popup-image {
             width: 100%;
-            height: 250px;
-            margin-bottom: 20px;
+            height: 200px;
+            object-fit: cover;
             border-radius: 10px;
+            margin-bottom: 20px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Controles de audio */
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+        
+        .audio-btn {
+            background-color: #2c3028;
+            color: #e8dec7;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 0 10px;
+        }
+        
+        .audio-btn:hover {
+            background-color: #1a1c18;
+            transform: scale(1.1);
+        }
+        
+        .audio-btn i {
+            font-size: 20px;
+        }
+        
+        .audio-time {
+            font-size: 0.9rem;
+            color: #5a5340;
+            margin: 0 10px;
+            min-width: 80px;
+            text-align: center;
         }
         
         .popup-description {
@@ -349,7 +393,7 @@
             margin-right: 5px;
         }
         
-        /* Iconos personalizados para marcadores */
+        /* Iconos personalizados para marcadores - posicionados para misma ubicación */
         .custom-marker {
             width: 40px;
             height: 40px;
@@ -363,18 +407,33 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 3px solid white;
+            position: absolute;
         }
+        
+        /* Posicionar marcadores en la misma ubicación */
+        .marker-pos-0 { transform: translate(-20px, -20px); }
+        .marker-pos-1 { transform: translate(20px, -20px); }
+        .marker-pos-2 { transform: translate(-20px, 20px); }
+        .marker-pos-3 { transform: translate(20px, 20px); }
+        .marker-pos-4 { transform: translate(0, 0); }
         
         .custom-marker:hover {
             transform: scale(1.1);
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
         
-        .marker-oaxaca { background: linear-gradient(135deg, #e53e3e, #c53030); }
-        .marker-puebla { background: linear-gradient(135deg, #38a169, #2f855a); }
-        .marker-yucatan { background: linear-gradient(135deg, #3182ce, #2c5aa0); }
-        .marker-jalisco { background: linear-gradient(135deg, #d69e2e, #b7791f); }
-        .marker-veracruz { background: linear-gradient(135deg, #805ad5, #6b46c1); }
+        .marker-1 { background: linear-gradient(135deg, #e53e3e, #c53030); }
+        .marker-2 { background: linear-gradient(135deg, #38a169, #2f855a); }
+        .marker-3 { background: linear-gradient(135deg, #3182ce, #2c5aa0); }
+        .marker-4 { background: linear-gradient(135deg, #d69e2e, #b7791f); }
+        .marker-5 { background: linear-gradient(135deg, #805ad5, #6b46c1); }
+        
+        /* Contenedor para marcadores agrupados */
+        .marker-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
         
         /* Efectos de secciones de contenido */
         .section-content {
@@ -406,18 +465,23 @@
                 padding: 20px;
             }
             
-            .popup-video {
-                height: 200px;
+            .popup-image {
+                height: 180px;
             }
         }
         
         @media (max-width: 480px) {
-            .popup-video {
-                height: 180px;
+            .popup-image {
+                height: 150px;
             }
             
             .popup-title {
                 font-size: 1.3rem;
+            }
+            
+            .audio-btn {
+                width: 45px;
+                height: 45px;
             }
         }
     </style>
@@ -433,11 +497,21 @@
                         <i data-lucide="x"></i>
                     </button>
                 </div>
-                <iframe class="popup-video" id="popupVideo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                
+                <img class="popup-image" id="popupImage" src="" alt="Imagen del platillo">
+                
+                <!-- Controles de audio -->
+                <div class="audio-controls">
+                    <button class="audio-btn" id="playPauseBtn">
+                        <i data-lucide="play" id="playIcon"></i>
+                    </button>
+                    <div class="audio-time" id="currentTime">0:00</div>
+                </div>
+                
                 <div class="popup-description" id="popupDescription">Descripción del platillo...</div>
                 <div class="popup-footer">
                     <span id="popupRegion">Región</span>
-                    <span>Gastronomía Mexicana</span>
+                    <span id="popupAuthor">Autor</span>
                 </div>
             </div>
         </div>
@@ -507,23 +581,23 @@
                 
                 <!-- Controles del mapa -->
                 <div class="map-controls">
-                    <h3><i data-lucide="navigation"></i> Ubicaciones destacadas</h3>
-                    <p>Haz clic en los marcadores del mapa o en las ubicaciones de la lista para explorar:</p>
+                    <h3><i data-lucide="navigation"></i> Platillos destacados</h3>
+                    <p>Haz clic en los marcadores del mapa o en los platillos de la lista para explorar:</p>
                     <ul class="location-list">
                         <li class="location-item" data-location="0">
-                            <strong>Oaxaca</strong><br>Mole tradicional
+                            <strong>Arroz rojo</strong>
                         </li>
                         <li class="location-item" data-location="1">
-                            <strong>Puebla</strong><br>Chiles en nogada
+                            <strong>Pollo en adobo de cacahuate</strong>
                         </li>
                         <li class="location-item" data-location="2">
-                            <strong>Yucatán</strong><br>Cochinita pibil
+                            <strong>Chile con carne de puerco</strong>
                         </li>
                         <li class="location-item" data-location="3">
-                            <strong>Jalisco</strong><br>Birria
+                            <strong>Gallo estilo Tenería del Santuario</strong>
                         </li>
                         <li class="location-item" data-location="4">
-                            <strong>Veracruz</strong><br>Huachinango a la veracruzana
+                            <strong>Huachinango a la Veracruzana</strong>
                         </li>
                     </ul>
                 </div>
@@ -555,6 +629,9 @@
         </div>
     </div>
 
+    <!-- Audio oculto -->
+    <audio id="audioPlayer" style="display: none;"></audio>
+
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script>
         // Inicializar iconos
@@ -565,14 +642,20 @@
         let is3DEnabled = false;
         let markers = [];
         let currentLocationIndex = null;
+        let audioPlayer = document.getElementById('audioPlayer');
+        let isPlaying = false;
 
         // Elementos del popup personalizado
         const popupOverlay = document.getElementById('popupOverlay');
         const popupTitle = document.getElementById('popupTitle');
-        const popupVideo = document.getElementById('popupVideo');
+        const popupImage = document.getElementById('popupImage');
         const popupDescription = document.getElementById('popupDescription');
         const popupRegion = document.getElementById('popupRegion');
+        const popupAuthor = document.getElementById('popupAuthor');
         const popupClose = document.getElementById('popupClose');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const playIcon = document.getElementById('playIcon');
+        const currentTime = document.getElementById('currentTime');
 
         // Función para cambiar entre secciones
         document.addEventListener('DOMContentLoaded', function() {
@@ -633,6 +716,17 @@
                     closePopup();
                 }
             });
+            
+            // Configurar botón de play/pause
+            playPauseBtn.addEventListener('click', toggleAudio);
+            
+            // Actualizar tiempo del audio
+            audioPlayer.addEventListener('timeupdate', updateTime);
+            audioPlayer.addEventListener('ended', function() {
+                isPlaying = false;
+                playIcon.setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+            });
         });
 
         // Configuración e inicialización del mapa con MapLibre
@@ -658,8 +752,8 @@
                         maxzoom: 22
                     }]
                 },
-                center: [-99.1332, 19.4326], // Centro en Ciudad de México
-                zoom: 5,
+                center: [-101.125382, 20.533269], // Centro en Valtierrilla
+                zoom: 14,
                 pitch: 0, // Inicialmente sin inclinación 3D
                 bearing: 0
             });
@@ -670,64 +764,85 @@
             // Datos de las ubicaciones
             const locations = [
                 {
-                    coordinates: [-96.7236, 17.0732], // Oaxaca
-                    title: "Mole Oaxaqueño",
-                    videoId: "dQw4w9WgXcQ",
-                    description: "El mole oaxaqueño es una de las siete variedades de mole que se preparan en Oaxaca. Esta receta ancestral combina más de 20 ingredientes, incluyendo chiles, especias, chocolate y semillas.",
-                    region: "Oaxaca",
-                    iconClass: "marker-oaxaca",
-                    iconText: "M"
+                    coordinates: [-101.125382, 20.533269], // Valtierrilla 1
+                    title: "Arroz rojo",
+                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Reemplazar con audio real
+                    imageSrc: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                    description: "Delicioso arroz rojo tradicional preparado con tomate y especias.",
+                    region: "Valtierrilla",
+                    author: "Sandra Luz Gutiérrez D.",
+                    iconClass: "marker-1",
+                    iconText: "AR",
+                    markerPos: "marker-pos-0"
                 },
                 {
-                    coordinates: [-98.2062, 19.0414], // Puebla
-                    title: "Chiles en Nogada",
-                    videoId: "dQw4w9WgXcQ",
-                    description: "Plato tradicional poblano que representa los colores de la bandera mexicana. Se prepara con chile poblano relleno de picadillo y cubierto con salsa de nuez y granada.",
-                    region: "Puebla",
-                    iconClass: "marker-puebla",
-                    iconText: "C"
+                    coordinates: [-101.125382, 20.533269], // Valtierrilla 2
+                    title: "Pollo en adobo de cacahuate",
+                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                    imageSrc: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                    description: "Pollo cocido en un adobo cremoso de cacahuate con especias tradicionales.",
+                    region: "Valtierrilla",
+                    author: "Maricela Gutiérrez D.",
+                    iconClass: "marker-2",
+                    iconText: "PA",
+                    markerPos: "marker-pos-1"
                 },
                 {
-                    coordinates: [-89.5926, 20.9674], // Yucatán
-                    title: "Cochinita Pibil",
-                    videoId: "dQw4w9WgXcQ",
-                    description: "La cochinita pibil es un platillo yucateco que consiste en carne de cerdo marinada en achiote y jugo de naranja agria, cocida lentamente en un horno de tierra.",
-                    region: "Yucatán",
-                    iconClass: "marker-yucatan",
-                    iconText: "C"
+                    coordinates: [-101.125382, 20.533269], // Valtierrilla 3
+                    title: "Chile con carne de puerco",
+                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                    imageSrc: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                    description: "Plato picante con carne de cerdo y chiles regionales.",
+                    region: "Valtierrilla",
+                    author: "Blanca Estela Escoto González",
+                    iconClass: "marker-3",
+                    iconText: "CP",
+                    markerPos: "marker-pos-2"
                 },
                 {
-                    coordinates: [-103.3496, 20.6597], // Jalisco
-                    title: "Birria",
-                    videoId: "dQw4w9WgXcQ",
-                    description: "La birria es un platillo típico de Jalisco, especialmente de la zona de Los Altos. Se prepara con carne de chivo o res, adobada con una mezcla de chiles y especias.",
-                    region: "Jalisco",
-                    iconClass: "marker-jalisco",
-                    iconText: "B"
+                    coordinates: [-101.195099, 20.565436], // Salamanca
+                    title: "Gallo estilo Tenería del Santuario",
+                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                    imageSrc: "https://images.unsplash.com/photo-1563379091339-03246963d9d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                    description: "Plato tradicional de gallo preparado al estilo de Tenería del Santuario.",
+                    region: "Salamanca",
+                    author: "Ma. Lucia Parra Yañez",
+                    iconClass: "marker-4",
+                    iconText: "GA",
+                    markerPos: "marker-pos-4"
                 },
                 {
-                    coordinates: [-96.1340, 19.1738], // Veracruz
-                    title: "Huachinango a la Veracruzana",
-                    videoId: "dQw4w9WgXcQ",
-                    description: "Plato emblemático de Veracruz que consiste en filetes de huachinango cocidos en una salsa de jitomate, aceitunas, alcaparras y chiles güeros.",
-                    region: "Veracruz",
-                    iconClass: "marker-veracruz",
-                    iconText: "H"
+                    coordinates: [-101.125382, 20.533269], // Valtierrilla 4
+                    title: "Tamales de elote",
+                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                    imageSrc: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                    description: "Tamales dulces de elote tradicionales de la región.",
+                    region: "Valtierrilla",
+                    author: "Cocinera tradicional",
+                    iconClass: "marker-5",
+                    iconText: "TE",
+                    markerPos: "marker-pos-3"
                 }
             ];
             
             // Añadir marcadores al mapa cuando esté cargado
             map.on('load', function() {
                 locations.forEach((location, index) => {
+                    // Crear contenedor para marcadores agrupados
+                    const container = document.createElement('div');
+                    container.className = 'marker-container';
+                    
                     // Crear elemento HTML personalizado para el marcador
                     const el = document.createElement('div');
-                    el.className = `custom-marker ${location.iconClass}`;
+                    el.className = `custom-marker ${location.iconClass} ${location.markerPos}`;
                     el.innerHTML = location.iconText;
                     el.title = location.title;
                     
+                    container.appendChild(el);
+                    
                     // Crear el marcador
                     const marker = new maplibregl.Marker({
-                        element: el
+                        element: container
                     })
                         .setLngLat(location.coordinates)
                         .addTo(map);
@@ -761,7 +876,7 @@
                     // Animación de vuelo al punto
                     map.flyTo({
                         center: location.coordinates,
-                        zoom: 12,
+                        zoom: 16,
                         pitch: is3DEnabled ? 60 : 45,
                         bearing: 0,
                         duration: 2000,
@@ -787,22 +902,66 @@
         
         // Función para mostrar el popup personalizado
         function showPopup(location) {
+            // Pausar audio actual si está sonando
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                playIcon.setAttribute('data-lucide', 'play');
+            }
+            
+            // Configurar contenido del popup
             popupTitle.textContent = location.title;
-            popupVideo.src = `https://www.youtube.com/embed/${location.videoId}`;
+            popupImage.src = location.imageSrc;
+            popupImage.alt = location.title;
             popupDescription.textContent = location.description;
             popupRegion.textContent = location.region;
+            popupAuthor.textContent = location.author;
             
+            // Configurar audio
+            audioPlayer.src = location.audioSrc;
+            audioPlayer.load();
+            currentTime.textContent = "0:00";
+            
+            // Mostrar popup
             popupOverlay.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Prevenir scroll
+            document.body.style.overflow = 'hidden';
+            
+            // Actualizar iconos
+            lucide.createIcons();
+        }
+        
+        // Función para alternar audio play/pause
+        function toggleAudio() {
+            if (isPlaying) {
+                audioPlayer.pause();
+                playIcon.setAttribute('data-lucide', 'play');
+            } else {
+                audioPlayer.play();
+                playIcon.setAttribute('data-lucide', 'pause');
+            }
+            isPlaying = !isPlaying;
+            lucide.createIcons();
+        }
+        
+        // Función para actualizar el tiempo del audio
+        function updateTime() {
+            const minutes = Math.floor(audioPlayer.currentTime / 60);
+            const seconds = Math.floor(audioPlayer.currentTime % 60);
+            currentTime.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
         }
         
         // Función para cerrar el popup
         function closePopup() {
-            popupOverlay.classList.remove('active');
-            document.body.style.overflow = ''; // Restaurar scroll
+            // Pausar audio
+            if (isPlaying) {
+                audioPlayer.pause();
+                isPlaying = false;
+                playIcon.setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+            }
             
-            // Pausar el video
-            popupVideo.src = '';
+            popupOverlay.classList.remove('active');
+            document.body.style.overflow = '';
         }
         
         // Función para alternar vista 3D
@@ -829,8 +988,8 @@
         // Función para resetear la vista del mapa
         function resetView() {
             map.flyTo({
-                center: [-99.1332, 19.4326],
-                zoom: 5,
+                center: [-101.125382, 20.533269],
+                zoom: 14,
                 pitch: 0,
                 bearing: 0,
                 duration: 1500
