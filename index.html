@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recetarios Vivos: cocina como territorios</title>
+    <title>Recetarios Vivos: cocina como territorio</title>
     <script src='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js'></script>
     <link href='https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css' rel='stylesheet' />
     <link rel="stylesheet" href="https://unpkg.com/lucide@latest/font/lucide.css">
@@ -43,11 +43,14 @@
             width: 100%;
             z-index: 10;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         
         @media (min-width: 768px) {
             .menu-column {
-                width: 280px;
+                width: 300px;
                 min-height: 100vh;
                 position: fixed;
                 left: 0;
@@ -55,32 +58,57 @@
             }
             
             .content-column {
-                margin-left: 280px;
+                margin-left: 300px;
             }
         }
         
+        /* Logo */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(44, 48, 40, 0.3);
+            width: 100%;
+        }
+        
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        
+        .logo-text {
+            font-size: 1rem;
+            color: #2c3028;
+            font-weight: bold;
+        }
+        
         .menu-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 20px;
             color: #2c3028;
             text-align: center;
             padding-bottom: 10px;
             border-bottom: 1px solid rgba(44, 48, 40, 0.3);
+            width: 100%;
         }
         
         .menu {
             list-style: none;
+            width: 100%;
+            padding: 0;
+            margin: 0;
         }
         
         .menu-item {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .menu-link {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
+            padding: 10px 15px;
             text-decoration: none;
             color: #2c3028;
             border-radius: 8px;
@@ -191,6 +219,8 @@
             animation: popupAppear 0.4s ease forwards;
             border: 3px solid #c5b182;
             overflow: hidden;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         @keyframes popupAppear {
@@ -218,6 +248,7 @@
             color: #2c3028;
             font-size: 1.5rem;
             margin: 0;
+            flex: 1;
         }
         
         .popup-close {
@@ -234,6 +265,7 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            flex-shrink: 0;
         }
         
         .popup-close:hover {
@@ -336,6 +368,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
+            padding: 0;
         }
         
         .location-item {
@@ -393,7 +426,7 @@
             margin-right: 5px;
         }
         
-        /* Iconos personalizados para marcadores - posicionados para misma ubicación */
+        /* Marcadores fijos en sus coordenadas */
         .custom-marker {
             width: 40px;
             height: 40px;
@@ -407,33 +440,22 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 3px solid white;
-            position: absolute;
+            position: relative;
         }
-        
-        /* Posicionar marcadores en la misma ubicación */
-        .marker-pos-0 { transform: translate(-20px, -20px); }
-        .marker-pos-1 { transform: translate(20px, -20px); }
-        .marker-pos-2 { transform: translate(-20px, 20px); }
-        .marker-pos-3 { transform: translate(20px, 20px); }
-        .marker-pos-4 { transform: translate(0, 0); }
         
         .custom-marker:hover {
             transform: scale(1.1);
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         }
         
+        /* Colores para marcadores */
         .marker-1 { background: linear-gradient(135deg, #e53e3e, #c53030); }
         .marker-2 { background: linear-gradient(135deg, #38a169, #2f855a); }
         .marker-3 { background: linear-gradient(135deg, #3182ce, #2c5aa0); }
         .marker-4 { background: linear-gradient(135deg, #d69e2e, #b7791f); }
         .marker-5 { background: linear-gradient(135deg, #805ad5, #6b46c1); }
-        
-        /* Contenedor para marcadores agrupados */
-        .marker-container {
-            position: relative;
-            width: 80px;
-            height: 80px;
-        }
+        .marker-6 { background: linear-gradient(135deg, #ed64a6, #d53f8c); }
+        .marker-7 { background: linear-gradient(135deg, #718096, #4a5568); }
         
         /* Efectos de secciones de contenido */
         .section-content {
@@ -468,6 +490,14 @@
             .popup-image {
                 height: 180px;
             }
+            
+            .popup-title {
+                font-size: 1.3rem;
+            }
+            
+            .logo {
+                max-width: 100px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -475,13 +505,13 @@
                 height: 150px;
             }
             
-            .popup-title {
-                font-size: 1.3rem;
-            }
-            
             .audio-btn {
                 width: 45px;
                 height: 45px;
+            }
+            
+            .logo {
+                max-width: 80px;
             }
         }
     </style>
@@ -520,7 +550,13 @@
     <div class="container">
         <!-- Columna del menú -->
         <div class="menu-column">
-            <div class="menu-title">Recetarios Vivos: cocina como territorio</div>
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="img/logo.png" alt="Logo Recetarios Vivos" class="logo">
+                <div class="logo-text">Recetarios Vivos</div>
+            </div>
+            
+            <div class="menu-title">Cocina como territorio</div>
             <ul class="menu">
                 <li class="menu-item">
                     <a href="#" class="menu-link active" data-target="inicio">
@@ -597,7 +633,13 @@
                             <strong>Gallo estilo Tenería del Santuario</strong>
                         </li>
                         <li class="location-item" data-location="4">
-                            <strong>Huachinango a la Veracruzana</strong>
+                            <strong>Pan Rústico</strong>
+                        </li>
+                        <li class="location-item" data-location="5">
+                            <strong>Gallo Salmantino</strong>
+                        </li>
+                        <li class="location-item" data-location="6">
+                            <strong>Mole de olla de res</strong>
                         </li>
                     </ul>
                 </div>
@@ -644,6 +686,12 @@
         let currentLocationIndex = null;
         let audioPlayer = document.getElementById('audioPlayer');
         let isPlaying = false;
+        let originalView = {
+            center: [-102.0, 23.0], // Centro de México
+            zoom: 5,
+            pitch: 0,
+            bearing: 0
+        };
 
         // Elementos del popup personalizado
         const popupOverlay = document.getElementById('popupOverlay');
@@ -657,8 +705,89 @@
         const playIcon = document.getElementById('playIcon');
         const currentTime = document.getElementById('currentTime');
 
-        // Función para cambiar entre secciones
-        document.addEventListener('DOMContentLoaded', function() {
+        // Datos de las ubicaciones (definidos globalmente)
+        const locations = [
+            {
+                coordinates: [-101.125382, 20.533269], // Valtierrilla, Guanajuato
+                title: "Arroz rojo",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Delicioso arroz rojo tradicional preparado con tomate y especias.",
+                region: "Valtierrilla, Guanajuato",
+                author: "Sandra Luz Gutiérrez D.",
+                iconClass: "marker-1",
+                iconText: "AR"
+            },
+            {
+                coordinates: [-101.125382, 20.533269], // Valtierrilla, Guanajuato (misma ubicación)
+                title: "Pollo en adobo de cacahuate",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Pollo cocido en un adobo cremoso de cacahuate con especias tradicionales.",
+                region: "Valtierrilla, Guanajuato",
+                author: "Maricela Gutiérrez D.",
+                iconClass: "marker-2",
+                iconText: "PA"
+            },
+            {
+                coordinates: [-101.125382, 20.533269], // Valtierrilla, Guanajuato (misma ubicación)
+                title: "Chile con carne de puerco",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Plato picante con carne de cerdo y chiles regionales.",
+                region: "Valtierrilla, Guanajuato",
+                author: "Blanca Estela Escoto González",
+                iconClass: "marker-3",
+                iconText: "CP"
+            },
+            {
+                coordinates: [-101.195099, 20.565436], // Salamanca, Guanajuato
+                title: "Gallo estilo Tenería del Santuario",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1563379091339-03246963d9d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Plato tradicional de gallo preparado al estilo de Tenería del Santuario.",
+                region: "Salamanca, Guanajuato",
+                author: "Ma. Lucia Parra Yañez",
+                iconClass: "marker-4",
+                iconText: "GT"
+            },
+            {
+                coordinates: [-101.132580, 20.530985], // Valtierrilla, Guanajuato (cerca)
+                title: "Pan Rústico",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Pan rústico tradicional de la región, elaborado con harina local y técnicas ancestrales.",
+                region: "Valtierrilla, Guanajuato",
+                author: "Colectiva de mujeres: Raquel Casanova Ramblas, Graciela Pacheco, Amelia Pacheco, Ma. Guadalupe Pacheco, Clementina Casanova Ramblas, Ma. Guadalupe Montecillo Mendoza",
+                iconClass: "marker-5",
+                iconText: "PR"
+            },
+            {
+                coordinates: [-101.206161, 20.555803], // Salamanca, Guanajuato
+                title: "Gallo Salmantino",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Gallo preparado al estilo tradicional de Salamanca, con especias y técnicas únicas de la región.",
+                region: "Salamanca, Guanajuato",
+                author: "Ma. Refugio Domínguez",
+                iconClass: "marker-6",
+                iconText: "GS"
+            },
+            {
+                coordinates: [-99.252464, 18.933681], // Morelos
+                title: "Mole de olla de res",
+                audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
+                imageSrc: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
+                description: "Mole de olla tradicional con carne de res, verduras y una mezcla única de chiles.",
+                region: "Morelos",
+                author: "Mireya Ramírez",
+                iconClass: "marker-7",
+                iconText: "MO"
+            }
+        ];
+
+        // Función para cambiar entre secciones del menú principal
+        function setupMenuNavigation() {
             const menuLinks = document.querySelectorAll('.menu-link');
             
             menuLinks.forEach(link => {
@@ -688,14 +817,35 @@
                         // Si es la sección del mapa, ajustar el tamaño después de mostrarse
                         if (targetId === 'mapa') {
                             setTimeout(() => {
-                                if (map) map.resize();
+                                if (map) {
+                                    map.resize();
+                                    // Forzar redibujado de marcadores
+                                    setTimeout(() => {
+                                        markers.forEach(marker => {
+                                            if (marker._element) {
+                                                marker._element.style.visibility = 'visible';
+                                            }
+                                        });
+                                    }, 100);
+                                }
                             }, 100);
                         }
                     }
                 });
             });
+        }
+
+        // Configurar eventos cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM cargado, configurando eventos...");
             
-            // Inicializar el mapa cuando se carga la página
+            // Configurar navegación del menú principal
+            setupMenuNavigation();
+            
+            // Configurar eventos de la lista de platillos
+            setupLocationListEvents();
+            
+            // Inicializar el mapa
             initMap();
             
             // Configurar controles 3D
@@ -729,9 +879,26 @@
             });
         });
 
+        // Configurar eventos de la lista de platillos
+        function setupLocationListEvents() {
+            const locationItems = document.querySelectorAll('.location-item');
+            
+            locationItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const locationIndex = parseInt(this.getAttribute('data-location'));
+                    if (locationIndex >= 0 && locationIndex < locations.length) {
+                        currentLocationIndex = locationIndex;
+                        flyToLocation(locationIndex);
+                    }
+                });
+            });
+        }
+
         // Configuración e inicialización del mapa con MapLibre
         function initMap() {
-            // Crear el mapa
+            console.log("Inicializando mapa...");
+            
+            // Crear el mapa centrado en México
             map = new maplibregl.Map({
                 container: 'map',
                 style: {
@@ -752,152 +919,106 @@
                         maxzoom: 22
                     }]
                 },
-                center: [-101.125382, 20.533269], // Centro en Valtierrilla
-                zoom: 14,
-                pitch: 0, // Inicialmente sin inclinación 3D
-                bearing: 0
+                center: originalView.center,
+                zoom: originalView.zoom,
+                pitch: originalView.pitch,
+                bearing: originalView.bearing
             });
             
             // Añadir controles de navegación
             map.addControl(new maplibregl.NavigationControl());
             
-            // Datos de las ubicaciones
-            const locations = [
-                {
-                    coordinates: [-101.125382, 20.533269], // Valtierrilla 1
-                    title: "Arroz rojo",
-                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Reemplazar con audio real
-                    imageSrc: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-                    description: "Delicioso arroz rojo tradicional preparado con tomate y especias.",
-                    region: "Valtierrilla",
-                    author: "Sandra Luz Gutiérrez D.",
-                    iconClass: "marker-1",
-                    iconText: "AR",
-                    markerPos: "marker-pos-0"
-                },
-                {
-                    coordinates: [-101.125382, 20.533269], // Valtierrilla 2
-                    title: "Pollo en adobo de cacahuate",
-                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-                    imageSrc: "https://images.unsplash.com/photo-1565557623262-b51c2513a641?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-                    description: "Pollo cocido en un adobo cremoso de cacahuate con especias tradicionales.",
-                    region: "Valtierrilla",
-                    author: "Maricela Gutiérrez D.",
-                    iconClass: "marker-2",
-                    iconText: "PA",
-                    markerPos: "marker-pos-1"
-                },
-                {
-                    coordinates: [-101.125382, 20.533269], // Valtierrilla 3
-                    title: "Chile con carne de puerco",
-                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-                    imageSrc: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-                    description: "Plato picante con carne de cerdo y chiles regionales.",
-                    region: "Valtierrilla",
-                    author: "Blanca Estela Escoto González",
-                    iconClass: "marker-3",
-                    iconText: "CP",
-                    markerPos: "marker-pos-2"
-                },
-                {
-                    coordinates: [-101.195099, 20.565436], // Salamanca
-                    title: "Gallo estilo Tenería del Santuario",
-                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
-                    imageSrc: "https://images.unsplash.com/photo-1563379091339-03246963d9d6?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-                    description: "Plato tradicional de gallo preparado al estilo de Tenería del Santuario.",
-                    region: "Salamanca",
-                    author: "Ma. Lucia Parra Yañez",
-                    iconClass: "marker-4",
-                    iconText: "GA",
-                    markerPos: "marker-pos-4"
-                },
-                {
-                    coordinates: [-101.125382, 20.533269], // Valtierrilla 4
-                    title: "Tamales de elote",
-                    audioSrc: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
-                    imageSrc: "https://images.unsplash.com/photo-1563245372-f21724e3856d?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80",
-                    description: "Tamales dulces de elote tradicionales de la región.",
-                    region: "Valtierrilla",
-                    author: "Cocinera tradicional",
-                    iconClass: "marker-5",
-                    iconText: "TE",
-                    markerPos: "marker-pos-3"
-                }
-            ];
-            
-            // Añadir marcadores al mapa cuando esté cargado
+            // Añadir marcadores después de que el mapa esté completamente cargado
             map.on('load', function() {
-                locations.forEach((location, index) => {
-                    // Crear contenedor para marcadores agrupados
-                    const container = document.createElement('div');
-                    container.className = 'marker-container';
-                    
-                    // Crear elemento HTML personalizado para el marcador
-                    const el = document.createElement('div');
-                    el.className = `custom-marker ${location.iconClass} ${location.markerPos}`;
-                    el.innerHTML = location.iconText;
-                    el.title = location.title;
-                    
-                    container.appendChild(el);
-                    
-                    // Crear el marcador
-                    const marker = new maplibregl.Marker({
-                        element: container
-                    })
-                        .setLngLat(location.coordinates)
-                        .addTo(map);
-                    
-                    // Guardar referencia al marcador
-                    markers.push(marker);
-                    
-                    // Configurar evento para el marcador
-                    el.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        currentLocationIndex = index;
-                        flyToLocation(index);
-                    });
-                });
+                console.log("Mapa completamente cargado, añadiendo marcadores...");
+                
+                // Pequeño delay para asegurar que el mapa esté listo
+                setTimeout(() => {
+                    addMarkers();
+                }, 500);
             });
             
-            // Función para centrar el mapa en una ubicación específica con animación
-            function flyToLocation(index) {
-                if (index >= 0 && index < locations.length) {
-                    const location = locations[index];
-                    
-                    // Actualizar estado activo en la lista
-                    document.querySelectorAll('.location-item').forEach((item, i) => {
-                        if (i === index) {
-                            item.classList.add('active');
-                        } else {
-                            item.classList.remove('active');
-                        }
-                    });
-                    
-                    // Animación de vuelo al punto
-                    map.flyTo({
-                        center: location.coordinates,
-                        zoom: 16,
-                        pitch: is3DEnabled ? 60 : 45,
-                        bearing: 0,
-                        duration: 2000,
-                        essential: true
-                    });
-                    
-                    // Mostrar el popup después de la animación
+            // También añadir marcadores si el mapa ya está cargado
+            map.on('styledata', function() {
+                console.log("Estilos del mapa cargados");
+                if (markers.length === 0) {
                     setTimeout(() => {
-                        showPopup(location);
-                    }, 2100);
+                        addMarkers();
+                    }, 300);
                 }
-            }
+            });
+        }
+        
+        // Función para añadir marcadores
+        function addMarkers() {
+            console.log("Añadiendo", locations.length, "marcadores...");
             
-            // Añadir eventos a los elementos de la lista de ubicaciones
-            document.querySelectorAll('.location-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const locationIndex = parseInt(this.getAttribute('data-location'));
-                    currentLocationIndex = locationIndex;
-                    flyToLocation(locationIndex);
+            // Limpiar marcadores anteriores si existen
+            markers.forEach(marker => marker.remove());
+            markers = [];
+            
+            locations.forEach((location, index) => {
+                console.log(`Creando marcador ${index}: ${location.title} en [${location.coordinates[0]}, ${location.coordinates[1]}]`);
+                
+                // Crear elemento HTML personalizado para el marcador
+                const el = document.createElement('div');
+                el.className = `custom-marker ${location.iconClass}`;
+                el.innerHTML = location.iconText;
+                el.title = location.title;
+                el.style.cursor = 'pointer';
+                
+                // Crear el marcador
+                const marker = new maplibregl.Marker({
+                    element: el
+                })
+                    .setLngLat(location.coordinates)
+                    .addTo(map);
+                
+                // Guardar referencia al marcador
+                markers.push(marker);
+                
+                // Configurar evento para el marcador
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    currentLocationIndex = index;
+                    flyToLocation(index);
                 });
             });
+            
+            console.log("Marcadores añadidos correctamente");
+        }
+        
+        // Función para centrar el mapa en una ubicación específica con animación
+        function flyToLocation(index) {
+            if (index >= 0 && index < locations.length) {
+                const location = locations[index];
+                
+                // Actualizar estado activo en la lista
+                document.querySelectorAll('.location-item').forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.add('active');
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+                
+                console.log(`Volando a ubicación ${index}: ${location.title} en [${location.coordinates[0]}, ${location.coordinates[1]}]`);
+                
+                // Animación de vuelo al punto
+                map.flyTo({
+                    center: location.coordinates,
+                    zoom: 14,
+                    pitch: is3DEnabled ? 60 : 45,
+                    bearing: 0,
+                    duration: 2000,
+                    essential: true
+                });
+                
+                // Mostrar el popup después de la animación
+                setTimeout(() => {
+                    showPopup(location);
+                }, 2100);
+            }
         }
         
         // Función para mostrar el popup personalizado
@@ -960,8 +1081,25 @@
                 lucide.createIcons();
             }
             
+            // Cerrar popup
             popupOverlay.classList.remove('active');
             document.body.style.overflow = '';
+            
+            // Regresar a la vista de México completo
+            setTimeout(() => {
+                map.flyTo({
+                    center: originalView.center,
+                    zoom: originalView.zoom,
+                    pitch: is3DEnabled ? 60 : 0,
+                    bearing: 0,
+                    duration: 1500
+                });
+                
+                // Quitar estado activo de la lista
+                document.querySelectorAll('.location-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+            }, 300);
         }
         
         // Función para alternar vista 3D
@@ -988,8 +1126,8 @@
         // Función para resetear la vista del mapa
         function resetView() {
             map.flyTo({
-                center: [-101.125382, 20.533269],
-                zoom: 14,
+                center: originalView.center,
+                zoom: originalView.zoom,
                 pitch: 0,
                 bearing: 0,
                 duration: 1500
